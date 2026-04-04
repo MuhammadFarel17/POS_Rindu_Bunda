@@ -98,3 +98,4 @@ class CoaResource extends Resource
         ];
     }
 }
+}
