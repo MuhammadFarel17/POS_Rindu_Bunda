@@ -1,14 +1,14 @@
 <?php
 
-namespace App\Filament\Resources\UserResource\Pages;
+namespace App\Filament\Resources\CoaResource\Pages;
 
-use App\Filament\Resources\UserResource;
+use App\Filament\Resources\CoaResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 
-class ListUsers extends ListRecords
+class ListCoas extends ListRecords
 {
-    protected static string $resource = UserResource::class;
+    protected static string $resource = CoaResource::class;
 
     protected function getHeaderActions(): array
     {
