@@ -113,3 +113,4 @@ class UserResource extends Resource
         ];
     }
 }
+
