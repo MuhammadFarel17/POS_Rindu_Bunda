@@ -18,7 +18,7 @@ class UserResource extends Resource
     protected static ?string $navigationLabel = 'Users';
     protected static ?string $pluralModelLabel = 'Users';
 
-    // ================= FORM =================
+    // FORM
     public static function form(Form $form): Form
     {
         return $form
@@ -63,7 +63,7 @@ class UserResource extends Resource
             ]);
     }
 
-    // ================= TABLE =================
+    // TABLE
     public static function table(Table $table): Table
     {
         return $table
@@ -111,5 +111,5 @@ class UserResource extends Resource
             'create' => Pages\CreateUser::route('/create'),
             'edit' => Pages\EditUser::route('/{record}/edit'),
         ];
- 
     }
+}
