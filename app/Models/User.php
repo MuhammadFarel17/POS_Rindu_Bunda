@@ -36,6 +36,10 @@ class User extends Authenticatable
     /**
      * 🔒 Auto hash password
      */
+   public function setPasswordAttribute(string $value)
+    {
+        if (!empty($value)) {
+            // cegah double hash    
     public function setPasswordAttribute($value)
     {
         if (!empty($value)) {
@@ -55,4 +59,7 @@ class User extends Authenticatable
     {
         return $this->is_active === true;
     }
+}
+}
+}
 }

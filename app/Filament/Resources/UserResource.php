@@ -14,6 +14,8 @@ use Filament\Tables\Table;
 use Filament\Tables\Actions\Action; //untuk dapat menggunakan action
 use Barryvdh\DomPDF\Facade\Pdf; // Kalau kamu pakai DomPDF
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Hash;
+
 class UserResource extends Resource
 {
     protected static ?string $model = User::class;
@@ -23,6 +25,8 @@ class UserResource extends Resource
     protected static ?string $pluralModelLabel = 'Users';
      protected static ?string $navigationGroup = 'Masterdata';
 
+
+    protected static ?int $navigationSort = 6;
 
     // ================= FORM =================
     public static function form(Form $form): Form
@@ -56,6 +60,12 @@ class UserResource extends Resource
                     ->label('Foto')
                     ->image()
                     ->directory('users'),
+                    ->directory('users')
+                    ->acceptedFileTypes([
+                        'image/jpeg',
+                        'image/png',
+                        'image/webp',
+                ]),
 
                 Forms\Components\Toggle::make('is_active')
                     ->label('Aktif')
@@ -66,6 +76,12 @@ class UserResource extends Resource
                     ->required(fn ($record) => $record === null)
                     ->dehydrated(fn ($state) => filled($state))
                     ->label('Password'),
+                    ->label('Password')
+                    ->required(fn ($record) => $record === null)
+                    ->dehydrated(fn ($state) => filled($state))
+                    ->dehydrateStateUsing(
+                        fn ($state) => filled($state) ? Hash::make($state) : null
+                    ),
             ]);
     }
 
@@ -96,6 +112,10 @@ class UserResource extends Resource
                     ->dateTime()
                     ->label('Dibuat'),
             ])
+                    ->label('Dibuat')
+                    ->dateTime(),
+            ])
+
             ->actions([
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
@@ -119,6 +139,7 @@ class UserResource extends Resource
                     );
                 })
             ])
+
             ->bulkActions([
                 Tables\Actions\DeleteBulkAction::make(),
             ]);
