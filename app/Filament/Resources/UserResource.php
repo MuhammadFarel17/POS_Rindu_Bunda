@@ -52,7 +52,12 @@ class UserResource extends Resource
                 Forms\Components\FileUpload::make('photo')
                     ->label('Foto')
                     ->image()
-                    ->directory('users'),
+                    ->directory('users')
+                    ->acceptedFileTypes([
+                        'image/jpeg',
+                        'image/png',
+                        'image/webp',
+                ]),
 
                 Forms\Components\Toggle::make('is_active')
                     ->label('Aktif')

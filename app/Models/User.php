@@ -40,6 +40,10 @@ class User extends Authenticatable
     {
         if (!empty($value)) {
             // cegah double hash    
+    public function setPasswordAttribute($value)
+    {
+        if (!empty($value)) {
+            // cegah double hash
             if (strlen($value) < 60) {
                 $this->attributes['password'] = bcrypt($value);
             } else {
@@ -55,4 +59,6 @@ class User extends Authenticatable
     {
         return $this->is_active === true;
     }
+}
+}
 }
