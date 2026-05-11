@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\SuplayerResource\Pages;
+use App\Models\Suplayer; 
 use App\Models\Suplayer; // Pastikan nama file Model juga sudah diubah menjadi Suplayer.php
 use App\Models\User;
 use Filament\Forms;
@@ -29,6 +30,26 @@ class SuplayerResource extends Resource
     {
         return $form
             ->schema([
+                // Field User ID untuk mencatat Admin yang menginput
+                Select::make('user_id')
+                    ->label('Admin Penginput')
+                    ->relationship('user', 'name')
+                    ->default(auth()->id()) // Otomatis ambil ID admin yang login
+                    ->disabled() // Dikunci agar tidak bisa diubah manual
+                    ->dehydrated() // Tetap dikirim ke database saat simpan
+                    ->required(),
+
+                TextInput::make('kode_suplayer')
+                    ->label('Kode Suplayer')
+                    ->default(fn () => Suplayer::getKodeSuplayer()) 
+                    ->required()
+                    ->readonly(),
+
+                TextInput::make('name')
+                    ->label('Nama Suplayer')
+                    ->required()
+                    ->placeholder('Isikan nama suplayer'),
+
                 // Relasi ke tabel users
                 Select::make('user_id')
                     ->label('Pilih User')
@@ -96,6 +117,11 @@ class SuplayerResource extends Resource
                     ->sortable()
                     ->searchable(),
                 
+                // Menampilkan nama admin yang melakukan penginputan
+                TextColumn::make('user.name')
+                    ->label('Admin Input')
+                    ->sortable(),
+
                 TextColumn::make('phone')
                     ->label('Telepon'),
                 

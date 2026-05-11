@@ -2,6 +2,8 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PengirimanEmailController;
+
+
 use App\Http\Controllers\GajiMidtransController;
 
 /*
@@ -14,6 +16,8 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+// Jalankan ini di browser untuk memulai proses otomatis: localhost:8000/kirim-email-retur
+Route::get('/proses_kirim_email_retur', [PengirimanEmailController::class, 'proses_kirim_email_retur']);
 // proses pengiriman email
 use App\Http\Controllers\PengirimanEmailController;
 Route::get('/proses_kirim_email_pembelian', [PengirimanEmailController::class, 'proses_kirim_email_pembelian']);
