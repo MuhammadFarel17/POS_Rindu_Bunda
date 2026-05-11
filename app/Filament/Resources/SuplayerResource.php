@@ -3,46 +3,82 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\SuplayerResource\Pages;
-use App\Filament\Resources\SuplayerResource\RelationManagers;
-use App\Models\Suplayer;
+use App\Models\Suplayer; // Pastikan nama file Model juga sudah diubah menjadi Suplayer.php
+use App\Models\User;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Select;
+use Filament\Tables\Columns\TextColumn;
 
 class SuplayerResource extends Resource
 {
+    // Menggunakan model Suplayer
     protected static ?string $model = Suplayer::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-face-smile';
+
+    protected static ?string $navigationLabel = 'Suplayer';
+
+    protected static ?string $navigationGroup = 'Masterdata';
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('name')
+                // Relasi ke tabel users
+                Select::make('user_id')
+                    ->label('Pilih User')
+                    ->relationship('user', 'email')
+                    ->searchable()
+                    ->preload()
                     ->required()
-                    ->maxLength(255),
+                    ->live()
+                    ->afterStateUpdated(function ($state, callable $set) {
+                        if ($state) {
+                            $user = User::find($state);
+                            if ($user) {
+                                $set('name', $user->name);
+                                $set('email', $user->email);
+                            }
+                        }
+                    }),
 
-                Forms\Components\TextInput::make('phone')
+                TextInput::make('kode_suplayer')
+                    ->label('Kode Suplayer')
+                    ->default(fn () => Suplayer::getKodeSuplayer()) 
+                    ->required()
+                    ->readonly(),
+
+                TextInput::make('name')
+                    ->label('Nama Suplayer')
+                    ->required()
+                    ->readonly()
+                    ->placeholder('Otomatis dari User'),
+
+                TextInput::make('address')
+                    ->label('Alamat Lengkap')
+                    ->required()
+                    ->placeholder('Masukkan alamat suplayer'),
+
+                TextInput::make('city')
+                    ->label('Kota')
+                    ->placeholder('Masukkan kota suplayer'),
+
+                TextInput::make('phone')
+                    ->label('Nomor Telepon')
                     ->tel()
-                    ->maxLength(20),
+                    ->required()
+                    ->placeholder('Contoh: 08123456789'),
 
-                Forms\Components\TextInput::make('email')
+                TextInput::make('email')
+                    ->label('Email Suplayer')
                     ->email()
-                    ->maxLength(255),
-
-                Forms\Components\Textarea::make('address')
-                    ->rows(3),
-
-                Forms\Components\TextInput::make('city')
-                    ->maxLength(100),
-
-                Forms\Components\Toggle::make('is_active')
-                    ->default(true),
+                    ->required()
+                    ->placeholder('Masukkan Email Suplayer'),
             ]);
     }
 
@@ -50,31 +86,46 @@ class SuplayerResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('name')
-                    ->searchable()
-                    ->sortable(),
-    
-                Tables\Columns\TextColumn::make('phone')
+                TextColumn::make('kode_suplayer')
+                    ->label('Kode Suplayer')
+                    ->sortable()
                     ->searchable(),
-    
-                Tables\Columns\TextColumn::make('email')
+                
+                TextColumn::make('name')
+                    ->label('Nama Suplayer')
+                    ->sortable()
                     ->searchable(),
-    
-                Tables\Columns\TextColumn::make('city')
-                    ->searchable(),
-    
-                Tables\Columns\IconColumn::make('is_active')
-                    ->boolean(),
-    
-                Tables\Columns\TextColumn::make('created_at')
+                
+                TextColumn::make('phone')
+                    ->label('Telepon'),
+                
+                TextColumn::make('email')
+                    ->label('Email'),
+
+                TextColumn::make('city')
+                    ->label('Kota')
+                    ->toggleable(),
+
+                TextColumn::make('is_active')
+                    ->label('Status')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        '1' => 'success',
+                        '0' => 'danger',
+                    })
+                    ->formatStateUsing(fn (string $state): string => $state === '1' ? 'Aktif' : 'Non-Aktif'),
+
+                TextColumn::make('created_at')
+                    ->label('Dibuat Pada')
                     ->dateTime()
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                Tables\Filters\TernaryFilter::make('is_active')
-                    ->label('Status Aktif'),
+                //
             ])
             ->actions([
+                Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])
@@ -83,13 +134,6 @@ class SuplayerResource extends Resource
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
-    }
-    
-    public static function getRelations(): array
-    {
-        return [
-            //
-        ];
     }
 
     public static function getPages(): array

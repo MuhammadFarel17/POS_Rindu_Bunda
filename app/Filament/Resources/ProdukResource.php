@@ -19,41 +19,46 @@ class ProdukResource extends Resource
 {
     protected static ?string $model = Produk::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-shopping-cart';
+
+    protected static ?string $navigationLabel = 'Produks';
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                // 1. Nama Produk
-                TextInput::make('nama_produk')
-                    ->required()
-                    ->maxLength(255),
+                Forms\Components\Section::make('Informasi Produk')
+                    ->schema([
+                        TextInput::make('nama_produk')
+                            ->label('Nama Produk')
+                            ->required()
+                            ->maxLength(255),
 
-                // 2. Gambar (Sesuai Modul 4.4 & 4.5.3)
-                FileUpload::make('gambar')
-                    ->directory('produk')
-                    ->image()
-                    ->nullable(),
+                        FileUpload::make('gambar')
+                            ->label('Gambar Produk')
+                            ->image()
+                            ->directory('produk-images') // Akan disimpan di storage/app/public/produk-images
+                            ->required(),
 
-                // 3. Harga
-                TextInput::make('harga')
-                    ->numeric()
-                    ->prefix('Rp')
-                    ->required(),
+                        TextInput::make('harga')
+                            ->label('Harga')
+                            ->numeric()
+                            ->prefix('Rp')
+                            ->required(),
 
-                // 4. Stok
-                TextInput::make('stok')
-                    ->numeric()
-                    ->required(),
+                        TextInput::make('stok')
+                            ->label('Stok')
+                            ->numeric()
+                            ->required(),
 
-                // 5. Kategori (Dropdown Kosong sesuai request untuk FK nanti)
-                Select::make('kategori')
-                    ->options([
-                        // Kosong dulu nanti diisi dari FK
-                    ])
-                    ->placeholder('Select an option')
-                    ->nullable(),
+                        // INI BAGIAN YANG MENARIK DATA KATEGORI
+                        Select::make('id_kategori')
+                            ->label('Kategori')
+                            ->relationship('kategoriRelasi', 'nama_kategori') // Pakai nama fungsi relasi di Model
+                            ->searchable()
+                            ->preload() // Supaya data langsung muncul saat diklik
+                            ->required(),
+                    ])->columns(2),
             ]);
     }
 
@@ -61,13 +66,26 @@ class ProdukResource extends Resource
     {
         return $table
             ->columns([
-                // Menampilkan kolom sesuai urutan database
-                TextColumn::make('nama_produk')->searchable()->sortable(),
-                ImageColumn::make('gambar'),
-                TextColumn::make('harga')->money('IDR')->sortable(),
-                TextColumn::make('stok')->sortable(),
-                TextColumn::make('kategori'),
-                TextColumn::make('created_at')->dateTime()->sortable()->toggleable(isToggledHiddenByDefault: true),
+                ImageColumn::make('gambar')
+                    ->label('Foto'),
+
+                TextColumn::make('nama_produk')
+                    ->label('Nama Produk')
+                    ->searchable()
+                    ->sortable(),
+
+                TextColumn::make('kategoriRelasi.nama_kategori')
+                    ->label('Kategori')
+                    ->sortable(),
+
+                TextColumn::make('harga')
+                    ->label('Harga')
+                    ->money('idr')
+                    ->sortable(),
+
+                TextColumn::make('stok')
+                    ->label('Stok')
+                    ->sortable(),
             ])
             ->filters([
                 //
@@ -81,13 +99,6 @@ class ProdukResource extends Resource
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
-    }
-
-    public static function getRelations(): array
-    {
-        return [
-            //
-        ];
     }
 
     public static function getPages(): array
