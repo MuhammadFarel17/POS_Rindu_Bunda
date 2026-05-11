@@ -1,6 +1,9 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\PengirimanEmailController;
+
+
 
 /*
 |--------------------------------------------------------------------------
@@ -16,3 +19,6 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
+
+// Jalankan ini di browser untuk memulai proses otomatis: localhost:8000/kirim-email-retur
+Route::get('/proses_kirim_email_retur', [PengirimanEmailController::class, 'proses_kirim_email_retur']);

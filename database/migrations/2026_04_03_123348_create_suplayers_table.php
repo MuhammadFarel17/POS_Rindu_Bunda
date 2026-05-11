@@ -10,7 +10,8 @@ return new class extends Migration
     {
         Schema::create('suplayer', function (Blueprint $table) {
             $table->id();
-            
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->string('kode_suplayer'); // kode unik untuk suplayer
             $table->string('name');
             $table->string('phone')->nullable();
             $table->string('email')->nullable();
