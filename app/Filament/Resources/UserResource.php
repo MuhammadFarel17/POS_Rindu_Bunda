@@ -9,6 +9,11 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+
+// tambahan untuk tombol unduh pdf
+use Filament\Tables\Actions\Action; //untuk dapat menggunakan action
+use Barryvdh\DomPDF\Facade\Pdf; // Kalau kamu pakai DomPDF
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Hash;
 
 class UserResource extends Resource
@@ -18,6 +23,8 @@ class UserResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-user';
     protected static ?string $navigationLabel = 'Users';
     protected static ?string $pluralModelLabel = 'Users';
+     protected static ?string $navigationGroup = 'Masterdata';
+
 
     protected static ?int $navigationSort = 6;
 
@@ -52,6 +59,7 @@ class UserResource extends Resource
                 Forms\Components\FileUpload::make('photo')
                     ->label('Foto')
                     ->image()
+                    ->directory('users'),
                     ->directory('users')
                     ->acceptedFileTypes([
                         'image/jpeg',
@@ -65,6 +73,9 @@ class UserResource extends Resource
 
                 Forms\Components\TextInput::make('password')
                     ->password()
+                    ->required(fn ($record) => $record === null)
+                    ->dehydrated(fn ($state) => filled($state))
+                    ->label('Password'),
                     ->label('Password')
                     ->required(fn ($record) => $record === null)
                     ->dehydrated(fn ($state) => filled($state))
@@ -98,6 +109,9 @@ class UserResource extends Resource
                     ->boolean(),
 
                 Tables\Columns\TextColumn::make('created_at')
+                    ->dateTime()
+                    ->label('Dibuat'),
+            ])
                     ->label('Dibuat')
                     ->dateTime(),
             ])
@@ -105,6 +119,25 @@ class UserResource extends Resource
             ->actions([
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
+            ])
+            // tombol tambahan
+            ->headerActions([
+                // tombol tambahan export pdf
+                // ✅ Tombol Unduh PDF
+                Action::make('downloadPdf')
+                ->label('Unduh PDF')
+                ->icon('heroicon-o-document-arrow-down')
+                ->color('success')
+                ->action(function () {
+                    $user = User::all();
+
+                    $pdf = Pdf::loadView('pdf.user', ['user' => $user]);
+
+                    return response()->streamDownload(
+                        fn () => print($pdf->output()),
+                        'user-list.pdf'
+                    );
+                })
             ])
 
             ->bulkActions([

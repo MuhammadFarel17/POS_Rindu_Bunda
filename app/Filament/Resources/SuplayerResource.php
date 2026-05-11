@@ -35,11 +35,24 @@ class SuplayerResource extends Resource
     {
         return $form
             ->schema([
+                // Relasi ke tabel users
                 Select::make('user_id')
                     ->label('Pilih User')
                     ->relationship('user', 'email')
                     ->searchable()
                     ->preload()
+                    ->required()
+                    ->live()
+                    ->afterStateUpdated(function ($state, callable $set) {
+                        if ($state) {
+                            $user = User::find($state);
+                            if ($user) {
+                                $set('name', $user->name);
+                                $set('email', $user->email);
+                            }
+                        }
+                    }),
+
                     ->required()
                     ->live()
                     ->afterStateUpdated(function ($state, callable $set) {
@@ -114,6 +127,18 @@ class SuplayerResource extends Resource
                     ->required()
                     ->placeholder('Masukkan alamat suplayer'),
 
+
+                TextInput::make('name')
+                    ->label('Nama Suplayer')
+                    ->required()
+                    ->readonly()
+                    ->placeholder('Otomatis dari User'),
+
+                TextInput::make('address')
+                    ->label('Alamat Lengkap')
+                    ->required()
+                    ->placeholder('Masukkan alamat suplayer'),
+
                 TextInput::make('city')
                     ->label('Kota')
                     ->placeholder('Masukkan kota suplayer'),
@@ -156,11 +181,13 @@ class SuplayerResource extends Resource
                     ->label('Kode Suplayer')
                     ->sortable()
                     ->searchable(),
+                
 
                 TextColumn::make('name')
                     ->label('Nama Suplayer')
                     ->sortable()
                     ->searchable(),
+                
 
                 TextColumn::make('phone')
                     ->label('Telepon'),
