@@ -11,7 +11,7 @@ class VerifyCsrfToken extends Middleware
      *
      * @var array<int, string>
      */
-    protected $except = [
-        //
+        protected $except = [
+        '/midtrans/notification', // Tambahkan ini agar tidak diblokir Laravel
     ];
 }
