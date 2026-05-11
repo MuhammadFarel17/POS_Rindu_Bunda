@@ -59,6 +59,30 @@ class ProdukResource extends Resource
                             ->preload() // Supaya data langsung muncul saat diklik
                             ->required(),
                     ])->columns(2),
+                TextInput::make('nama_produk')
+                    ->required()
+                    ->maxLength(255),
+
+                FileUpload::make('gambar')
+                    ->directory('produk')
+                    ->image()
+                    ->nullable(),
+
+                TextInput::make('harga')
+                    ->numeric()
+                    ->prefix('Rp')
+                    ->required(),
+
+                TextInput::make('stok')
+                    ->numeric()
+                    ->required(),
+
+                // Di bagian form()
+                Select::make('kategori') 
+                    ->label('Kategori')
+                    // Arahkan ke nama fungsi baru: 'kategoriRelasi'
+                    ->relationship('kategoriRelasi', 'nama_kategori') 
+                    ->required(),
             ]);
     }
 
@@ -86,6 +110,13 @@ class ProdukResource extends Resource
                 TextColumn::make('stok')
                     ->label('Stok')
                     ->sortable(),
+                TextColumn::make('nama_produk')->searchable()->sortable(),
+                ImageColumn::make('gambar'),
+                TextColumn::make('harga')->money('IDR')->sortable(),
+                TextColumn::make('stok')->sortable(),
+                // Mengakses relasi 'kategori' dan kolom 'nama_kategori'
+                TextColumn::make('kategori.nama_kategori')->label('Kategori')->sortable(),
+                TextColumn::make('created_at')->dateTime()->sortable()->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 //
