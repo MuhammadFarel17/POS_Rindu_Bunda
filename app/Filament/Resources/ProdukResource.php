@@ -25,35 +25,30 @@ class ProdukResource extends Resource
     {
         return $form
             ->schema([
-                // 1. Nama Produk
                 TextInput::make('nama_produk')
                     ->required()
                     ->maxLength(255),
 
-                // 2. Gambar (Sesuai Modul 4.4 & 4.5.3)
                 FileUpload::make('gambar')
                     ->directory('produk')
                     ->image()
                     ->nullable(),
 
-                // 3. Harga
                 TextInput::make('harga')
                     ->numeric()
                     ->prefix('Rp')
                     ->required(),
 
-                // 4. Stok
                 TextInput::make('stok')
                     ->numeric()
                     ->required(),
 
-                // 5. Kategori (Dropdown Kosong sesuai request untuk FK nanti)
-                Select::make('kategori')
-                    ->options([
-                        // Kosong dulu nanti diisi dari FK
-                    ])
-                    ->placeholder('Select an option')
-                    ->nullable(),
+                // Di bagian form()
+                Select::make('kategori') 
+                    ->label('Kategori')
+                    // Arahkan ke nama fungsi baru: 'kategoriRelasi'
+                    ->relationship('kategoriRelasi', 'nama_kategori') 
+                    ->required(),
             ]);
     }
 
@@ -61,12 +56,12 @@ class ProdukResource extends Resource
     {
         return $table
             ->columns([
-                // Menampilkan kolom sesuai urutan database
                 TextColumn::make('nama_produk')->searchable()->sortable(),
                 ImageColumn::make('gambar'),
                 TextColumn::make('harga')->money('IDR')->sortable(),
                 TextColumn::make('stok')->sortable(),
-                TextColumn::make('kategori'),
+                // Mengakses relasi 'kategori' dan kolom 'nama_kategori'
+                TextColumn::make('kategori.nama_kategori')->label('Kategori')->sortable(),
                 TextColumn::make('created_at')->dateTime()->sortable()->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
@@ -81,13 +76,6 @@ class ProdukResource extends Resource
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
-    }
-
-    public static function getRelations(): array
-    {
-        return [
-            //
-        ];
     }
 
     public static function getPages(): array
