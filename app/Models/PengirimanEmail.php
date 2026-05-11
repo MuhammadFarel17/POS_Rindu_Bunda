@@ -12,6 +12,9 @@ class PengirimanEmail extends Model
     protected $table = 'pengiriman_email';
     protected $guarded = [];
 
+    public function pembelian()
+    {
+        return $this->belongsTo(Pembelian::class, 'pembelian_id');
     public function gajiPegawai()
     {
         return $this->belongsTo(GajiPegawai::class, 'gaji_pegawai_id');

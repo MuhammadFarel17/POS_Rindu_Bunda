@@ -14,6 +14,9 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+// proses pengiriman email
+use App\Http\Controllers\PengirimanEmailController;
+Route::get('/proses_kirim_email_pembelian', [PengirimanEmailController::class, 'proses_kirim_email_pembelian']);
 Route::get('/bayar-gaji/{id}', [GajiMidtransController::class, 'bayar'])
     ->name('bayar.gaji');
 

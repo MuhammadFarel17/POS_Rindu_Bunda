@@ -19,12 +19,46 @@ class ProdukResource extends Resource
 {
     protected static ?string $model = Produk::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-shopping-cart';
+
+    protected static ?string $navigationLabel = 'Produks';
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
+                Forms\Components\Section::make('Informasi Produk')
+                    ->schema([
+                        TextInput::make('nama_produk')
+                            ->label('Nama Produk')
+                            ->required()
+                            ->maxLength(255),
+
+                        FileUpload::make('gambar')
+                            ->label('Gambar Produk')
+                            ->image()
+                            ->directory('produk-images') // Akan disimpan di storage/app/public/produk-images
+                            ->required(),
+
+                        TextInput::make('harga')
+                            ->label('Harga')
+                            ->numeric()
+                            ->prefix('Rp')
+                            ->required(),
+
+                        TextInput::make('stok')
+                            ->label('Stok')
+                            ->numeric()
+                            ->required(),
+
+                        // INI BAGIAN YANG MENARIK DATA KATEGORI
+                        Select::make('id_kategori')
+                            ->label('Kategori')
+                            ->relationship('kategoriRelasi', 'nama_kategori') // Pakai nama fungsi relasi di Model
+                            ->searchable()
+                            ->preload() // Supaya data langsung muncul saat diklik
+                            ->required(),
+                    ])->columns(2),
                 TextInput::make('nama_produk')
                     ->required()
                     ->maxLength(255),
@@ -56,6 +90,26 @@ class ProdukResource extends Resource
     {
         return $table
             ->columns([
+                ImageColumn::make('gambar')
+                    ->label('Foto'),
+
+                TextColumn::make('nama_produk')
+                    ->label('Nama Produk')
+                    ->searchable()
+                    ->sortable(),
+
+                TextColumn::make('kategoriRelasi.nama_kategori')
+                    ->label('Kategori')
+                    ->sortable(),
+
+                TextColumn::make('harga')
+                    ->label('Harga')
+                    ->money('idr')
+                    ->sortable(),
+
+                TextColumn::make('stok')
+                    ->label('Stok')
+                    ->sortable(),
                 TextColumn::make('nama_produk')->searchable()->sortable(),
                 ImageColumn::make('gambar'),
                 TextColumn::make('harga')->money('IDR')->sortable(),
