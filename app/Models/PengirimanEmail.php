@@ -34,5 +34,18 @@ class ReturPenjualan extends Model
     public function user()
     {
         return $this->belongsTo(User::class, 'id_user');
+class PengirimanEmail extends Model
+{
+    use HasFactory;
+
+    protected $table = 'pengiriman_email';
+    protected $guarded = [];
+
+    public function pembelian()
+    {
+        return $this->belongsTo(Pembelian::class, 'pembelian_id');
+    public function gajiPegawai()
+    {
+        return $this->belongsTo(GajiPegawai::class, 'gaji_pegawai_id');
     }
 }

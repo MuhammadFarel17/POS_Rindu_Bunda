@@ -30,6 +30,26 @@ class PengirimanEmailController extends Controller
                     'users.email',
                     'users.name as nama_petugas',
                     'penjualan.no_faktur'
+    public static function proses_kirim_email_pembelian()
+    {
+        // 1. Query data pembelian join ke suplayer
+        // Pastikan kolom 'kode_suplayer' dan 'nama_suplayer' ditarik dari database
+        $data = DB::table('pembelian')
+                ->join('suplayer', 'pembelian.kode_suplayer', '=', 'suplayer.id')
+                ->whereNotIn('pembelian.id', function ($query) {
+                    $query->select('pembelian_id') 
+                        ->from('pengiriman_email');
+                })
+                ->select(
+                    'pembelian.id',
+                    'pembelian.no_faktur',
+                    'pembelian.tgl',
+                    'pembelian.tagihan',
+                    'pembelian.status',
+                    'pembelian.kode_suplayer', // Diperlukan untuk PDF
+                    'pembelian.updated_at',    // Diperlukan untuk PDF
+                    'suplayer.name',  // Sesuai kolom tabel suplayer
+                    'suplayer.email'           
                 )
                 ->first();
 
@@ -64,11 +84,98 @@ class PengirimanEmailController extends Controller
             PengirimanEmail::create([
                 'retur_penjualan_id' => $id_retur, // Pastikan kolom ini sudah ada di tabel pengiriman_emails
                 'status' => 'sudah terkirim',
+            $id_pembelian = $data->id;
+            $email_tujuan = $data->email;
+
+            // 2. Generate PDF Nota Pembelian
+            // Semua key di bawah ini harus sama dengan variabel {{ $... }} di file blade
+            $pdf = Pdf::loadView('pdf.pembelian', [
+                'id'            => $data->id,
+                'no_faktur'     => $data->no_faktur,
+                'tgl'           => $data->tgl,           // Mengatasi error $tgl
+                'tagihan'       => $data->tagihan,
+                'status'        => $data->status,
+                'kode_suplayer' => $data->kode_suplayer, // ✅ Mengatasi error $kode_suplayer
+                'updated_at'    => $data->updated_at,    // Mengatasi error $updated_at
+                'suplayer'      => $data->name,
+            ]);
+
+            // Data untuk isi/body email
+            $dataAtribut = [
+                'customer_name'  => $data->name, 
+                'invoice_number' => $data->no_faktur
+            ];
+            // Di dalam PengirimanEmailController.phpS
+
+            // 3. Kirim email
+            Mail::to($email_tujuan)->send(new InvoiceMail($dataAtribut, $pdf->output()));
+
+            // Jeda 5 detik
+            sleep(5);
+
+            // 4. Catat pengiriman di tabel log
+            PengirimanEmail::create([
+                'pembelian_id'         => $id_pembelian, 
+                'status'               => 'sudah terkirim',
+use App\Models\PengirimanEmail;
+use App\Models\GajiPegawai;
+use Illuminate\Support\Facades\Mail;
+use Barryvdh\DomPDF\Facade\Pdf;
+
+class PengirimanEmailController extends Controller
+{
+    public static function proses_kirim_email_gaji()
+    {
+        date_default_timezone_set('Asia/Jakarta');
+
+        // Ambil data gaji yang sudah paid tapi belum dikirim emailnya
+        $data = GajiPegawai::with(['pegawai.user'])
+            ->where('status', 'paid')
+            ->whereNotIn('id', function ($query) {
+                $query->select('gaji_pegawai_id')
+                    ->from('pengiriman_email');
+            })
+            ->get();
+
+        foreach ($data as $gaji) {
+            $email = $gaji->pegawai->user->email ?? null;
+
+            if (!$email) continue;
+
+            $dataSlip = [
+                'no_slip_gaji'   => $gaji->no_slip_gaji,
+                'nama_pegawai'   => $gaji->pegawai->nama_pegawai,
+                'jabatan'        => $gaji->pegawai->jabatan,
+                'bulan'          => $gaji->bulan,
+                'tahun'          => $gaji->tahun,
+                'gaji_pokok'     => $gaji->gaji_pokok,
+                'total_tunjangan'=> $gaji->total_tunjangan,
+                'total_potongan' => $gaji->total_potongan,
+                'total_diterima' => $gaji->total_diterima,
+            ];
+
+            // Generate PDF
+            $pdf = Pdf::loadView('pdf.slip-gaji', ['data' => $dataSlip]);
+
+            // Kirim email
+            Mail::to($email)->send(new \App\Mail\SlipGajiMail($dataSlip, $pdf->output()));
+
+            // Delay agar tidak kena limit mailtrap
+            sleep(5);
+
+            // Catat pengiriman
+            PengirimanEmail::create([
+                'gaji_pegawai_id'    => $gaji->id,
+                'status'             => 'sudah terkirim',
                 'tgl_pengiriman_pesan' => now(),
             ]);
         }
 
         // Return ke view autorefresh agar proses berjalan terus secara otomatis
+        // Kembali ke view autorefresh untuk looping pengiriman selanjutnya
+        return view('pdf.autorefresh_email');
+    }
+    
         return view('autorefresh_email');
     }
 }

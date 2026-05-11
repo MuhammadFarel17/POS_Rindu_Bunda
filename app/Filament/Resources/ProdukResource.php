@@ -45,6 +45,7 @@ class ProdukResource extends Resource
                             ->label('Gambar Produk')
                             ->image()
                             ->directory('produk-images') 
+                            ->directory('produk-images') // Akan disimpan di storage/app/public/produk-images
                             ->required(),
 
                         TextInput::make('harga')
@@ -65,6 +66,38 @@ class ProdukResource extends Resource
                             ->preload() 
                             ->required(),
                     ])->columns(2),
+                        // INI BAGIAN YANG MENARIK DATA KATEGORI
+                        Select::make('id_kategori')
+                            ->label('Kategori')
+                            ->relationship('kategoriRelasi', 'nama_kategori') // Pakai nama fungsi relasi di Model
+                            ->searchable()
+                            ->preload() // Supaya data langsung muncul saat diklik
+                            ->required(),
+                    ])->columns(2),
+                TextInput::make('nama_produk')
+                    ->required()
+                    ->maxLength(255),
+
+                FileUpload::make('gambar')
+                    ->directory('produk')
+                    ->image()
+                    ->nullable(),
+
+                TextInput::make('harga')
+                    ->numeric()
+                    ->prefix('Rp')
+                    ->required(),
+
+                TextInput::make('stok')
+                    ->numeric()
+                    ->required(),
+
+                // Di bagian form()
+                Select::make('kategori') 
+                    ->label('Kategori')
+                    // Arahkan ke nama fungsi baru: 'kategoriRelasi'
+                    ->relationship('kategoriRelasi', 'nama_kategori') 
+                    ->required(),
             ]);
     }
 
@@ -92,6 +125,13 @@ class ProdukResource extends Resource
                 TextColumn::make('stok')
                     ->label('Stok')
                     ->sortable(),
+                TextColumn::make('nama_produk')->searchable()->sortable(),
+                ImageColumn::make('gambar'),
+                TextColumn::make('harga')->money('IDR')->sortable(),
+                TextColumn::make('stok')->sortable(),
+                // Mengakses relasi 'kategori' dan kolom 'nama_kategori'
+                TextColumn::make('kategori.nama_kategori')->label('Kategori')->sortable(),
+                TextColumn::make('created_at')->dateTime()->sortable()->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 //

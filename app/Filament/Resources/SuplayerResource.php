@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\SuplayerResource\Pages;
 use App\Models\Suplayer; 
+use App\Models\Suplayer; // Pastikan nama file Model juga sudah diubah menjadi Suplayer.php
 use App\Models\User;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -16,6 +17,7 @@ use Filament\Tables\Columns\TextColumn;
 
 class SuplayerResource extends Resource
 {
+    // Menggunakan model Suplayer
     protected static ?string $model = Suplayer::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-face-smile';
@@ -47,6 +49,36 @@ class SuplayerResource extends Resource
                     ->label('Nama Suplayer')
                     ->required()
                     ->placeholder('Isikan nama suplayer'),
+
+                // Relasi ke tabel users
+                Select::make('user_id')
+                    ->label('Pilih User')
+                    ->relationship('user', 'email')
+                    ->searchable()
+                    ->preload()
+                    ->required()
+                    ->live()
+                    ->afterStateUpdated(function ($state, callable $set) {
+                        if ($state) {
+                            $user = User::find($state);
+                            if ($user) {
+                                $set('name', $user->name);
+                                $set('email', $user->email);
+                            }
+                        }
+                    }),
+
+                TextInput::make('kode_suplayer')
+                    ->label('Kode Suplayer')
+                    ->default(fn () => Suplayer::getKodeSuplayer()) 
+                    ->required()
+                    ->readonly(),
+
+                TextInput::make('name')
+                    ->label('Nama Suplayer')
+                    ->required()
+                    ->readonly()
+                    ->placeholder('Otomatis dari User'),
 
                 TextInput::make('address')
                     ->label('Alamat Lengkap')
