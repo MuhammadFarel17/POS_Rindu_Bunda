@@ -9,6 +9,7 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Hash;
 
 class UserResource extends Resource
 {
@@ -17,6 +18,8 @@ class UserResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-user';
     protected static ?string $navigationLabel = 'Users';
     protected static ?string $pluralModelLabel = 'Users';
+
+    protected static ?int $navigationSort = 6;
 
     // ================= FORM =================
     public static function form(Form $form): Form
@@ -62,9 +65,12 @@ class UserResource extends Resource
 
                 Forms\Components\TextInput::make('password')
                     ->password()
+                    ->label('Password')
                     ->required(fn ($record) => $record === null)
                     ->dehydrated(fn ($state) => filled($state))
-                    ->label('Password'),
+                    ->dehydrateStateUsing(
+                        fn ($state) => filled($state) ? Hash::make($state) : null
+                    ),
             ]);
     }
 
@@ -92,13 +98,15 @@ class UserResource extends Resource
                     ->boolean(),
 
                 Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
-                    ->label('Dibuat'),
+                    ->label('Dibuat')
+                    ->dateTime(),
             ])
+
             ->actions([
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])
+
             ->bulkActions([
                 Tables\Actions\DeleteBulkAction::make(),
             ]);

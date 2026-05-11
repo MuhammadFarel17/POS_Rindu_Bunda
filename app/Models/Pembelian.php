@@ -10,6 +10,14 @@ class Pembelian extends Model
 {
     use HasFactory;
 
+    protected $guarded = [];
+
+    // Since retur pembelians exist, let's add the relation
+    public function returPembelians()
+    {
+        return $this->hasMany(ReturPembelian::class, 'pembelian_id');
+    }
+}
     protected $table = 'pembelian';
     protected $guarded = [];
 

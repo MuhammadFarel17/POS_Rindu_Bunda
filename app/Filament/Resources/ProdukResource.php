@@ -15,6 +15,9 @@ use Filament\Tables\Table;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
+use Filament\Resources\Resource;
+use Filament\Tables;
+use Filament\Tables\Table;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ImageColumn;
 // tambahan untuk tombol unduh pdf
@@ -26,6 +29,11 @@ class ProdukResource extends Resource
 {
     protected static ?string $model = Produk::class;
 
+    protected static ?string $navigationIcon = 'heroicon-o-folder';
+
+    protected static ?string $pluralModelLabel = 'Produks';
+
+    protected static ?int $navigationSort = 2;
     protected static ?string $navigationIcon = 'heroicon-o-shopping-cart';
 
     protected static ?string $navigationLabel = 'Produks';
@@ -34,6 +42,7 @@ class ProdukResource extends Resource
     {
         return $form
             ->schema([
+                // Nama Produk
                 Forms\Components\Section::make('Informasi Produk')
                     ->schema([
                         TextInput::make('nama_produk')
@@ -78,20 +87,31 @@ class ProdukResource extends Resource
                     ->required()
                     ->maxLength(255),
 
+                // Gambar
                 FileUpload::make('gambar')
                     ->directory('produk')
                     ->image()
                     ->nullable(),
 
+                // Harga
                 TextInput::make('harga')
                     ->numeric()
                     ->prefix('Rp')
                     ->required(),
 
+                // Stok
                 TextInput::make('stok')
                     ->numeric()
                     ->required(),
 
+                // Kategori
+                Select::make('kategori')
+                    ->label('Kategori')
+                    ->options(
+                        \App\Models\Kategori::all()
+                            ->pluck('nama_kategori', 'nama_kategori')
+                    )
+                    ->searchable()
                 // Di bagian form()
                 Select::make('kategori') 
                     ->label('Kategori')
@@ -105,6 +125,25 @@ class ProdukResource extends Resource
     {
         return $table
             ->columns([
+                TextColumn::make('nama_produk')
+                    ->searchable()
+                    ->sortable(),
+
+                ImageColumn::make('gambar'),
+
+                TextColumn::make('harga')
+                    ->money('IDR')
+                    ->sortable(),
+
+                TextColumn::make('stok')
+                    ->sortable(),
+
+                TextColumn::make('kategori'),
+
+                TextColumn::make('created_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 ImageColumn::make('gambar')
                     ->label('Foto'),
 
@@ -133,13 +172,16 @@ class ProdukResource extends Resource
                 TextColumn::make('kategori.nama_kategori')->label('Kategori')->sortable(),
                 TextColumn::make('created_at')->dateTime()->sortable()->toggleable(isToggledHiddenByDefault: true),
             ])
+
             ->filters([
                 //
             ])
+
             ->actions([
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])
+
             // --- BAGIAN TOMBOL ATAS (COLORFUL) ---
             ->headerActions([
                 // Tombol PDF Warna Hijau Solid
@@ -182,6 +224,11 @@ class ProdukResource extends Resource
             ->emptyStateActions([
                 Tables\Actions\CreateAction::make(),
             ]);
+    }
+
+    public static function getRelations(): array
+    {
+        return [];
     }
 
     public static function getPages(): array
