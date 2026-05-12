@@ -16,6 +16,10 @@ class ToppingResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-sparkles';
 
+    protected static ?string $pluralModelLabel = 'Toppings';
+
+    protected static ?int $navigationSort = 4;
+
     public static function form(Form $form): Form
     {
         return $form
@@ -25,21 +29,24 @@ class ToppingResource extends Resource
                         Forms\Components\TextInput::make('name')
                             ->required()
                             ->maxLength(255),
+
                         Forms\Components\Grid::make(2)
                             ->schema([
                                 Forms\Components\TextInput::make('price')
                                     ->numeric()
                                     ->prefix('Rp')
                                     ->required(),
+
                                 Forms\Components\TextInput::make('cost')
                                     ->numeric()
                                     ->prefix('Rp')
                                     ->required(),
                             ]),
+
                         Forms\Components\Toggle::make('is_active')
                             ->default(true)
                             ->required(),
-                    ])
+                    ]),
             ]);
     }
 
@@ -50,27 +57,34 @@ class ToppingResource extends Resource
                 Tables\Columns\TextColumn::make('name')
                     ->searchable()
                     ->sortable(),
+
                 Tables\Columns\TextColumn::make('price')
                     ->money('IDR')
                     ->sortable(),
+
                 Tables\Columns\TextColumn::make('cost')
                     ->money('IDR')
                     ->sortable(),
+
                 Tables\Columns\IconColumn::make('is_active')
                     ->boolean()
                     ->label('Status'),
+
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
+
             ->filters([
                 Tables\Filters\TernaryFilter::make('is_active'),
             ])
+
             ->actions([
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])
+
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),

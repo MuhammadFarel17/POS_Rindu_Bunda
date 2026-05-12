@@ -10,6 +10,12 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 
+// tambahan untuk tombol unduh pdf
+use Filament\Tables\Actions\Action; //untuk dapat menggunakan action
+use Barryvdh\DomPDF\Facade\Pdf; // Kalau kamu pakai DomPDF
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Hash;
+
 class UserResource extends Resource
 {
     protected static ?string $model = User::class;
@@ -17,6 +23,10 @@ class UserResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-user';
     protected static ?string $navigationLabel = 'Users';
     protected static ?string $pluralModelLabel = 'Users';
+     protected static ?string $navigationGroup = 'Masterdata';
+
+
+    protected static ?int $navigationSort = 6;
 
     // ================= FORM =================
     public static function form(Form $form): Form
@@ -50,6 +60,12 @@ class UserResource extends Resource
                     ->label('Foto')
                     ->image()
                     ->directory('users'),
+                    ->directory('users')
+                    ->acceptedFileTypes([
+                        'image/jpeg',
+                        'image/png',
+                        'image/webp',
+                ]),
 
                 Forms\Components\Toggle::make('is_active')
                     ->label('Aktif')
@@ -60,6 +76,12 @@ class UserResource extends Resource
                     ->required(fn ($record) => $record === null)
                     ->dehydrated(fn ($state) => filled($state))
                     ->label('Password'),
+                    ->label('Password')
+                    ->required(fn ($record) => $record === null)
+                    ->dehydrated(fn ($state) => filled($state))
+                    ->dehydrateStateUsing(
+                        fn ($state) => filled($state) ? Hash::make($state) : null
+                    ),
             ]);
     }
 
@@ -90,10 +112,34 @@ class UserResource extends Resource
                     ->dateTime()
                     ->label('Dibuat'),
             ])
+                    ->label('Dibuat')
+                    ->dateTime(),
+            ])
+
             ->actions([
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])
+            // tombol tambahan
+            ->headerActions([
+                // tombol tambahan export pdf
+                // ✅ Tombol Unduh PDF
+                Action::make('downloadPdf')
+                ->label('Unduh PDF')
+                ->icon('heroicon-o-document-arrow-down')
+                ->color('success')
+                ->action(function () {
+                    $user = User::all();
+
+                    $pdf = Pdf::loadView('pdf.user', ['user' => $user]);
+
+                    return response()->streamDownload(
+                        fn () => print($pdf->output()),
+                        'user-list.pdf'
+                    );
+                })
+            ])
+
             ->bulkActions([
                 Tables\Actions\DeleteBulkAction::make(),
             ]);
