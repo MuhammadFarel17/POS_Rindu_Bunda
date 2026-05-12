@@ -16,3 +16,13 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
+
+
+// untuk contoh pdf
+use App\Http\Controllers\PDFController;
+Route::get('/contohpdf', [PDFController::class, 'contohpdf']);
+// proses pengiriman email
+use App\Http\Controllers\PengirimanEmailController;
+
+Route::get('/proses_kirim_email_reservasi', [PengirimanEmailController::class, 'proses_kirim_email_reservasi'])
+    ->name('proses.email.reservasi');
