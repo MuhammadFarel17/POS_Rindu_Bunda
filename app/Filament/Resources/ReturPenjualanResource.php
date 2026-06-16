@@ -4,10 +4,12 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\ReturPenjualanResource\Pages;
 use App\Models\ReturPenjualan;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Actions\Action;
 use Filament\Tables\Table;
 
 class ReturPenjualanResource extends Resource
@@ -112,6 +114,17 @@ class ReturPenjualanResource extends Resource
                 Tables\Actions\ViewAction::make(), // Tambahkan View agar bisa lihat detail tanpa edit
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
+            ])
+            ->headerActions([
+                Action::make('downloadPdf')
+                    ->label('Export PDF')
+                    ->icon('heroicon-o-document-text')
+                    ->color('success')
+                    ->action(function () {
+                        $retur_penjualan = ReturPenjualan::with('penjualan', 'user')->get();
+                        $pdf = Pdf::loadView('pdf.retur_penjualan_list', ['retur_penjualan' => $retur_penjualan]);
+                        return response()->streamDownload(fn () => print($pdf->output()), 'retur-penjualan-list.pdf');
+                    }),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

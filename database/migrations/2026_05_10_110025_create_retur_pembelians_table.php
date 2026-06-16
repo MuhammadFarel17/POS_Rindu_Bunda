@@ -12,16 +12,19 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('retur_pembelians', function (Blueprint $table) {
-
-        $table->id();
-        $table->foreignId('pembelian_id')->constrained('pembelians')->onDelete('cascade');
-        $table->string('no_retur')->unique();
-        $table->date('tanggal');
-        $table->decimal('total_retur', 15, 2)->default(0);
-        $table->text('keterangan')->nullable();
-        $table->timestamps();
-        });
-    }
+            $table->id();
+            
+            // Relasi ke tabel pembelian
+            $table->unsignedBigInteger('pembelian_id');
+            $table->foreign('pembelian_id')->references('id')->on('pembelian')->onDelete('cascade');
+            
+            $table->string('no_retur')->unique();
+            $table->date('tanggal');
+            $table->decimal('total_retur', 15, 2)->default(0);
+            $table->text('keterangan')->nullable();
+            $table->timestamps();
+        }); // Penutup Schema::create
+    } // Penutup public function up
 
     /**
      * Reverse the migrations.

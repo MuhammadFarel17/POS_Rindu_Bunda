@@ -10,18 +10,8 @@ class Pembelian extends Model
 {
     use HasFactory;
 
-    protected $guarded = [];
-
-    // Since retur pembelians exist, let's add the relation
-    public function returPembelians()
-    {
-        return $this->hasMany(ReturPembelian::class, 'pembelian_id');
-    }
-}
     protected $table = 'pembelian';
     protected $guarded = [];
-
-    // HAPUS fungsi booted() yang lama karena menyebabkan error Integrity constraint violation
 
     public static function getKodeFakturBeli()
     {
@@ -31,6 +21,11 @@ class Pembelian extends Model
         $noawal = substr($kd, -7);
         $noakhir = (int)$noawal + 1;
         return 'F-' . str_pad($noakhir, 7, "0", STR_PAD_LEFT);
+    }
+
+    public function returPembelians()
+    {
+        return $this->hasMany(ReturPembelian::class, 'pembelian_id');
     }
 
     public function pembelianProduk()

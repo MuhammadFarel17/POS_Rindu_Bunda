@@ -10,6 +10,11 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Actions\Action;
+use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Filament\Forms\Components\TextInput;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Tables\Actions\Action;
@@ -26,6 +31,7 @@ class KategoriResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Kategoris';
 
+    protected static ?string $navigationGroup = 'Masterdata';
     public static function form(Form $form): Form
     {
         return $form
@@ -108,7 +114,17 @@ class KategoriResource extends Resource
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])
-
+            ->headerActions([
+                Action::make('downloadPdf')
+                    ->label('Export PDF')
+                    ->icon('heroicon-o-document-text')
+                    ->color('success')
+                    ->action(function () {
+                        $kategori = Kategori::all();
+                        $pdf = Pdf::loadView('pdf.kategori', ['kategori' => $kategori]);
+                        return response()->streamDownload(fn () => print($pdf->output()), 'kategori-list.pdf');
+                    }),
+            ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),

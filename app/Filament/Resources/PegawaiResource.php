@@ -5,10 +5,12 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\PegawaiResource\Pages;
 use App\Models\Pegawai;
 use App\Models\User;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Actions\Action;
 use Filament\Tables\Table;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -153,6 +155,17 @@ class PegawaiResource extends Resource
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
+            ])
+            ->headerActions([
+                Action::make('downloadPdf')
+                    ->label('Export PDF')
+                    ->icon('heroicon-o-document-text')
+                    ->color('success')
+                    ->action(function () {
+                        $pegawai = Pegawai::with('user')->get();
+                        $pdf = Pdf::loadView('pdf.pegawai_list', ['pegawai' => $pegawai]);
+                        return response()->streamDownload(fn () => print($pdf->output()), 'pegawai-list.pdf');
+                    }),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

@@ -8,12 +8,14 @@ use App\Models\Suplayer;
 use App\Models\Suplayer; 
 use App\Models\Suplayer; // Pastikan nama file Model juga sudah diubah menjadi Suplayer.php
 use App\Models\User;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Select;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Actions\Action;
 use Filament\Tables\Table;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Select;
@@ -318,7 +320,17 @@ class SuplayerResource extends Resource
             ]);
     }
             ])
-
+            ->headerActions([
+                Action::make('downloadPdf')
+                    ->label('Export PDF')
+                    ->icon('heroicon-o-document-text')
+                    ->color('success')
+                    ->action(function () {
+                        $suplayer = Suplayer::all();
+                        $pdf = Pdf::loadView('pdf.suplayer_list', ['suplayer' => $suplayer]);
+                        return response()->streamDownload(fn () => print($pdf->output()), 'suplayer-list.pdf');
+                    }),
+            ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),

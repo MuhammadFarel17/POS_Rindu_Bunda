@@ -7,33 +7,21 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
-
-// tambahan
 use Illuminate\Mail\Mailables\Attachment;
-use App\Mail\ReservasiMail;
 
 class ReservasiMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    // =========================
-    // DATA
-    // =========================
     public $data;
     public $pdfContent;
 
-    // =========================
-    // CONSTRUCT
-    // =========================
-    public function __construct($data, $pdfContent)
+    public function __construct(array $data, string $pdfContent)
     {
         $this->data = $data;
         $this->pdfContent = $pdfContent;
     }
 
-    // =========================
-    // SUBJECT EMAIL
-    // =========================
     public function envelope(): Envelope
     {
         return new Envelope(
@@ -41,9 +29,6 @@ class ReservasiMail extends Mailable
         );
     }
 
-    // =========================
-    // ISI EMAIL (VIEW)
-    // =========================
     public function content(): Content
     {
         return new Content(
@@ -54,9 +39,6 @@ class ReservasiMail extends Mailable
         );
     }
 
-    // =========================
-    // ATTACHMENT PDF
-    // =========================
     public function attachments(): array
     {
         return [

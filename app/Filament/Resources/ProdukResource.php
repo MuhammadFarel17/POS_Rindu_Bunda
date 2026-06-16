@@ -6,11 +6,12 @@ use App\Filament\Resources\ProdukResource\Pages;
 use App\Filament\Exports\ProdukExporter;
 use Filament\Tables\Actions\ExportBulkAction;
 use App\Models\Produk;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
-use Filament\Tables\Actions\ExportAction;
+use Filament\Tables\Actions\Action;
 use Filament\Tables\Table;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\FileUpload;
@@ -38,6 +39,7 @@ class ProdukResource extends Resource
 
     protected static ?string $navigationLabel = 'Produks';
 
+    protected static ?string $navigationGroup = 'Masterdata';
     public static function form(Form $form): Form
     {
         return $form
@@ -181,34 +183,17 @@ class ProdukResource extends Resource
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])
-
-            // --- BAGIAN TOMBOL ATAS (COLORFUL) ---
             ->headerActions([
-                // Tombol PDF Warna Hijau Solid
                 Action::make('downloadPdf')
-                    ->label('Unduh PDF')
-                    ->icon('heroicon-s-document-arrow-down')
+                    ->label('Export PDF')
+                    ->icon('heroicon-o-document-text')
                     ->color('success')
                     ->action(function () {
-                        $produk = \App\Models\Produk::all();
-                        $pdf = Pdf::loadView('pdf.produk', ['produk' => $produk]);
-                        return response()->streamDownload(
-                            fn () => print($pdf->output()),
-                            'produk-list.pdf'
-                        );
+                        $produk = Produk::with('kategoriRelasi')->get();
+                        $pdf = Pdf::loadView('pdf.produk_list', ['produk' => $produk]);
+                        return response()->streamDownload(fn () => print($pdf->output()), 'produk-list.pdf');
                     }),
-
-                // Tombol Export Excel Warna Biru (Info) + Efek Pop Up
-                ExportAction::make()
-                    ->label('Export Excel')
-                    ->exporter(ProdukExporter::class)
-                    ->icon('heroicon-o-arrow-up-tray')
-                    ->color('info') 
-                    ->extraAttributes([
-                        'class' => 'font-bold shadow-md hover:scale-105 transition-all',
-                    ]),
             ])
-            // --- BAGIAN BULK ACTION (FITUR CENTANG) ---
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),

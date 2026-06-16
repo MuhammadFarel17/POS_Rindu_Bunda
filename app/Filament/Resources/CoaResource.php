@@ -2,10 +2,12 @@
 
 namespace App\Filament\Resources;
 
-// Tambahan standar
-use Filament\Forms\Components\TextInput;
+// Tambahan
+use Barryvdh\DomPDF\Facade\Pdf;
+use Filament\Forms\Components\TextInput; //kita menggunakan textinput
 use Filament\Forms\Components\Grid;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Actions\Action;
 
 // ✅ Import tambahan untuk PDF (DomPDF) dan Action
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -37,6 +39,7 @@ class CoaResource extends Resource
 
     protected static ?int $navigationSort = 5;
 
+    protected static ?string $navigationGroup = 'Masterdata';
     public static function form(Form $form): Form
     {
         return $form
@@ -106,30 +109,15 @@ class CoaResource extends Resource
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])
-
             ->headerActions([
-                // ✅ Tombol Export Excel (Sudah Ada)
-                ExportAction::make()
-                    ->exporter(CoaExporter::class)
-                    ->label('Export Excel')
-                    ->icon('heroicon-o-arrow-down-tray')
-                    ->color('success'),
-
-                // ✅ Tombol Unduh PDF (Tambahan Baru)
                 Action::make('downloadPdf')
-                    ->label('Unduh PDF')
-                    ->icon('heroicon-o-document-arrow-down')
-                    ->color('info') // Warna biru agar beda dengan Excel
+                    ->label('Export PDF')
+                    ->icon('heroicon-o-document-text')
+                    ->color('success')
                     ->action(function () {
                         $coa = Coa::all();
-
-                        // Memuat view dari resources/views/pdf/coa.blade.php
-                        $pdf = Pdf::loadView('pdf.coa', ['coa' => $coa]);
-
-                        return response()->streamDownload(
-                            fn () => print($pdf->output()),
-                            'daftar-coa-list.pdf'
-                        );
+                        $pdf = Pdf::loadView('pdf.coa_list', ['coa' => $coa]);
+                        return response()->streamDownload(fn () => print($pdf->output()), 'coa-list.pdf');
                     }),
             ])
             ->bulkActions([

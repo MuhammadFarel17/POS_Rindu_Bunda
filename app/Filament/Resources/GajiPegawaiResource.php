@@ -5,23 +5,24 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\GajiPegawaiResource\Pages;
 use App\Models\GajiPegawai;
 use App\Models\Pegawai;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Forms;
 use Filament\Forms\Form;
-use Filament\Forms\Components\Wizard;
-use Filament\Forms\Components\Section;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\Repeater;
-use Filament\Forms\Components\Placeholder;
-use Filament\Forms\Components\Hidden;
-use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Get;
 use Filament\Forms\Set;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\Placeholder;
+use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Wizard;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Actions\Action;
 use Filament\Tables\Table;
-use Barryvdh\DomPDF\Facade\Pdf;
+use Filament\Tables\Columns\TextColumn;
 use Illuminate\Support\Collection; // Tambahkan ini di atas
 
 class GajiPegawaiResource extends Resource
@@ -233,9 +234,28 @@ class GajiPegawaiResource extends Resource
                         'November' => 'November', 'Desember' => 'Desember',
                     ]),
             ])
-            // BAGIAN INI DIHAPUS/DIKOSONGKAN agar tidak bingung
             ->headerActions([
-                // Header action dihapus agar tidak muncul tombol "Unduh PDF" yang mengambil semua data
+                Tables\Actions\Action::make('downloadPdf')
+                    ->label('Export PDF')
+                    ->icon('heroicon-o-document-text')
+                    ->color('success')
+                    ->action(function () {
+                        $gaji = GajiPegawai::with('pegawai')->get();
+                        $pdf = Pdf::loadView('pdf.slip-gaji', ['data' => $gaji->map(fn($item) => [
+                            'no_slip_gaji'    => $item->no_slip_gaji,
+                            'nama_pegawai'    => $item->pegawai?->nama_pegawai ?? '-',
+                            'jabatan'         => $item->pegawai?->jabatan ?? '-',
+                            'bulan'           => $item->bulan,
+                            'tahun'           => $item->tahun,
+                            'gaji_pokok'      => $item->gaji_pokok,
+                            'total_tunjangan' => $item->total_tunjangan,
+                            'total_potongan'  => $item->total_potongan,
+                            'total_diterima'  => $item->total_diterima,
+                        ])]);
+                        return response()->streamDownload(function () use ($pdf) {
+                            echo $pdf->output();
+                        }, 'slip-gaji-list.pdf');
+                    }),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
