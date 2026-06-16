@@ -4,10 +4,12 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\ToppingResource\Pages;
 use App\Models\Topping;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Actions\Action;
 use Filament\Tables\Table;
 
 class ToppingResource extends Resource
@@ -16,6 +18,7 @@ class ToppingResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-sparkles';
 
+    protected static ?string $navigationGroup = 'Masterdata';
     public static function form(Form $form): Form
     {
         return $form
@@ -70,6 +73,19 @@ class ToppingResource extends Resource
             ->actions([
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
+            ])
+            ->headerActions([
+                Action::make('downloadPdf')
+                    ->label('Export PDF')
+                    ->icon('heroicon-o-document-text')
+                    ->color('success')
+                    ->action(function () {
+                        $topping = Topping::all();
+                        $pdf = Pdf::loadView('pdf.topping_list', ['topping' => $topping]);
+                        return response()->streamDownload(function () use ($pdf) {
+                            echo $pdf->output();
+                        }, 'topping-list.pdf');
+                    }),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

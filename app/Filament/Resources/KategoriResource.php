@@ -5,10 +5,12 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\KategoriResource\Pages;
 use App\Filament\Resources\KategoriResource\RelationManagers;
 use App\Models\Kategori;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Actions\Action;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -21,6 +23,7 @@ class KategoriResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
+    protected static ?string $navigationGroup = 'Masterdata';
     public static function form(Form $form): Form
     {
         return $form
@@ -70,6 +73,17 @@ class KategoriResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+            ])
+            ->headerActions([
+                Action::make('downloadPdf')
+                    ->label('Export PDF')
+                    ->icon('heroicon-o-document-text')
+                    ->color('success')
+                    ->action(function () {
+                        $kategori = Kategori::all();
+                        $pdf = Pdf::loadView('pdf.kategori', ['kategori' => $kategori]);
+                        return response()->streamDownload(fn () => print($pdf->output()), 'kategori-list.pdf');
+                    }),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

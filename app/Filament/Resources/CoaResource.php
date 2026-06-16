@@ -3,9 +3,11 @@
 namespace App\Filament\Resources;
 
 // Tambahan
+use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Forms\Components\TextInput; //kita menggunakan textinput
 use Filament\Forms\Components\Grid;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Actions\Action;
 
 use App\Filament\Resources\CoaResource\Pages;
 use App\Filament\Resources\CoaResource\RelationManagers;
@@ -24,6 +26,7 @@ class CoaResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
+    protected static ?string $navigationGroup = 'Masterdata';
     public static function form(Form $form): Form
     {
         return $form
@@ -74,6 +77,17 @@ class CoaResource extends Resource
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
+            ])
+            ->headerActions([
+                Action::make('downloadPdf')
+                    ->label('Export PDF')
+                    ->icon('heroicon-o-document-text')
+                    ->color('success')
+                    ->action(function () {
+                        $coa = Coa::all();
+                        $pdf = Pdf::loadView('pdf.coa_list', ['coa' => $coa]);
+                        return response()->streamDownload(fn () => print($pdf->output()), 'coa-list.pdf');
+                    }),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

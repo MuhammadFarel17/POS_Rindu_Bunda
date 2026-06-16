@@ -4,10 +4,12 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\ProdukResource\Pages;
 use App\Models\Produk;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Actions\Action;
 use Filament\Tables\Table;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\FileUpload;
@@ -23,6 +25,7 @@ class ProdukResource extends Resource
 
     protected static ?string $navigationLabel = 'Produks';
 
+    protected static ?string $navigationGroup = 'Masterdata';
     public static function form(Form $form): Form
     {
         return $form
@@ -93,6 +96,17 @@ class ProdukResource extends Resource
             ->actions([
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
+            ])
+            ->headerActions([
+                Action::make('downloadPdf')
+                    ->label('Export PDF')
+                    ->icon('heroicon-o-document-text')
+                    ->color('success')
+                    ->action(function () {
+                        $produk = Produk::with('kategoriRelasi')->get();
+                        $pdf = Pdf::loadView('pdf.produk_list', ['produk' => $produk]);
+                        return response()->streamDownload(fn () => print($pdf->output()), 'produk-list.pdf');
+                    }),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
