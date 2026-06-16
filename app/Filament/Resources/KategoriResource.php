@@ -3,10 +3,10 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\KategoriResource\Pages;
-use App\Filament\Resources\KategoriResource\RelationManagers;
 use App\Models\Kategori;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Forms;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -16,34 +16,42 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Forms\Components\TextInput;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Table;
+use Filament\Tables\Actions\Action;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\KategoriExport;
 
 class KategoriResource extends Resource
 {
     protected static ?string $model = Kategori::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-folder';
+
+    protected static ?int $navigationSort = 1;
+
+    protected static ?string $pluralModelLabel = 'Kategoris';
 
     protected static ?string $navigationGroup = 'Masterdata';
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                TextInput::make('id_kategori')
-                    ->default(function () {
-                        $latest = \App\Models\Kategori::latest('id')->first();
-                        if (! $latest) {
-                            return 'KAT-001';
-                        }
-                        $string = preg_replace("/[^0-9\.]/", '', $latest->id_kategori);
-                        return 'KAT-' . sprintf('%03d', (int)$string + 1);
-                    })
-                    ->disabled()
-                    ->dehydrated(false)
-                    ->label('ID Kategori'),
-                TextInput::make('nama_kategori')
-                    ->required()
-                    ->maxLength(255)
-                    ->label('Nama Kategori'),
+                Forms\Components\Section::make('Informasi Kategori')
+                    ->schema([
+                        TextInput::make('id_kategori')
+                            ->label('ID Kategori')
+                            ->placeholder('Otomatis...')
+                            ->disabled()
+                            ->dehydrated(false),
+
+                        TextInput::make('nama_kategori')
+                            ->label('Nama Kategori')
+                            ->required()
+                            ->unique(ignoreRecord: true)
+                            ->maxLength(255)
+                            ->placeholder('Masukkan nama kategori...'),
+                    ])
+                    ->columns(2),
             ]);
     }
 
@@ -52,18 +60,17 @@ class KategoriResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('id_kategori')
+                    ->label('ID')
                     ->searchable()
-                    ->sortable()
-                    ->label('ID Kategori'),
+                    ->sortable(),
+
                 TextColumn::make('nama_kategori')
+                    ->label('Nama Kategori')
                     ->searchable()
-                    ->sortable()
-                    ->label('Nama Kategori'),
+                    ->sortable(),
+
                 TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('updated_at')
+                    ->label('Dibuat Pada')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -71,8 +78,41 @@ class KategoriResource extends Resource
             ->filters([
                 //
             ])
+
+            // Tombol PDF & Excel
+            ->headerActions([
+                Action::make('downloadPdf')
+                    ->label('Unduh PDF')
+                    ->icon('heroicon-o-document-arrow-down')
+                    ->color('success')
+                    ->action(function () {
+                        $kategori = Kategori::all();
+
+                        $pdf = Pdf::loadView('pdf.kategori', [
+                            'kategori' => $kategori,
+                        ]);
+
+                        return response()->streamDownload(
+                            fn () => print($pdf->output()),
+                            'data-kategori.pdf'
+                        );
+                    }),
+
+                Action::make('downloadExcel')
+                    ->label('Unduh Excel')
+                    ->icon('heroicon-o-table-cells')
+                    ->color('primary')
+                    ->action(function () {
+                        return Excel::download(
+                            new KategoriExport(),
+                            'data-kategori.xlsx'
+                        );
+                    }),
+            ])
+
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
             ])
             ->headerActions([
                 Action::make('downloadPdf')
@@ -94,9 +134,7 @@ class KategoriResource extends Resource
 
     public static function getRelations(): array
     {
-        return [
-            //
-        ];
+        return [];
     }
 
     public static function getPages(): array
